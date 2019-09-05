@@ -1,7 +1,9 @@
 import argparse
-import os
+import os, sys
 import json
-from dpdsimulation import DPDSimulation, Statistics
+sys.path.insert(0, os.path.abspath('../'))
+from porousMediaSimulation.dpdsimulation import DPDSimulation, Statistics 
+
 
 def save_params(args):
     with open("%s/sim_params.json"%args.output_prefix, "w") as f:

@@ -1,0 +1,23 @@
+.. membrane_simulations documentation master file, created by
+   sphinx-quickstart on Thu Sep  5 11:31:13 2019.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to membrane_simulations's documentation!
+================================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   porousMediaSimulation.dpdsimulation
+   porousMediaSimulation.pore_network_sdf.py
+   porousMediaSimulation.simulate_membrane.py
+   porousMediaSimulation.membrane_image.py
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

@@ -1,5 +1,8 @@
 import argparse
-from dpdsimulation import DPDSimulation
+import os, sys
+sys.path.insert(0, os.path.abspath('../'))
+from porousMediaSimulation.dpdsimulation import DPDSimulation 
+
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description='')
