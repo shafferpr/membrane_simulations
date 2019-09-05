@@ -48,7 +48,6 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'matplotlib.sphinxext.plot_directive',
 ]
 
 napoleon_google_docstring = False
