@@ -50,7 +50,7 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 
-autodoc_mock_imports = ["mirheo"]
+autodoc_mock_imports = ["mirheo","ctypes"]
 
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import trimesh
 import numpy as np
 import os
-ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
+#ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
 
 class Statistics(object):
     def __init__(self,output,flowrate_stats=True,membrane_lower_boundary=15,boxsize=50,\
@@ -98,6 +98,7 @@ class Statistics(object):
 
 class DPDSimulation(object):
     def __init__(self, membrane_input_file, output_prefix, box_size=80, composite_solute=True):
+        ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
         self.membrane_input_file=membrane_input_file
         self.output_prefix=output_prefix
         self.box_size=box_size
