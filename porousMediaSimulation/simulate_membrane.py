@@ -1,8 +1,126 @@
+r"""
+This script can be used from the command line to perform a dpd simulation of a membrane structure
+
+Command Line Arguments
+----------------------
+
+This script has several command line arguments which you can view by running:
+
+.. code-block:: bash
+
+    python simulate_membrane.py --help
+
+
+The output should look like this:
+
+.. code-block:: bash
+
+    usage: simulate_membrane.py [-h] [--inputfile MEMBRANE_INPUT_FILE]
+                                [--output OUTPUT_PREFIX] [--box_size BOX_SIZE]
+                                [--composite_solute] [--solute_mesh SOLUTE_MESH]
+                                [--solute_rigid_coords SOLUTE_RIGID_COORDS]
+                                [--solvent_radius SOLVENT_RADIUS]
+                                [--solvent_density SOLVENT_DENSITY]
+                                [--solvent_force SOLVENT_FORCE]
+                                [--solute_solvent_interaction SOLUTE_SOLVENT_INTERACTION]
+                                [--solute_wall_interaction SOLUTE_WALL_INTERACTION]
+                                [--dump_every DUMP_EVERY] [--steps STEPS]
+                                [--membrane_lower_boundary MEMBRANE_LOWER_BOUNDARY]
+                                [--solute_z_position SOLUTE_Z_POSITION]
+                                [--sqrt_n_solutes SQRT_N_SOLUTES]
+
+    generate a membrane structure from sdf file, and perform a DPD simulation
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --inputfile MEMBRANE_INPUT_FILE
+                            sdf membrane structure inputfile
+      --output OUTPUT_PREFIX
+                            directory for all of the output files (including
+                            membrane geometry, particle trajectories, and stats
+                            files and figures)
+      --box_size BOX_SIZE   total boxsize for cubic box, default=50
+      --composite_solute    include composite solute particles, this does not
+                            require an argument, just include --composite_solute
+                            to use this
+      --solute_mesh SOLUTE_MESH
+                            the .off mesh file containing the solute shape
+      --solute_rigid_coords SOLUTE_RIGID_COORDS
+                            the .txt file containing the coordinates of particles
+                            in a single solute molecule
+      --solvent_radius SOLVENT_RADIUS
+                            size of the solvent particles, default=1.0
+      --solvent_density SOLVENT_DENSITY
+                            density of the solvent, default=5
+      --solvent_force SOLVENT_FORCE
+                            force acting on the solvent particles pushing them
+                            through the membrane, default=-0.1
+      --solute_solvent_interaction SOLUTE_SOLVENT_INTERACTION
+                            strength of solute solvent interaction, >35 means
+                            hydrophobic, default=35 (neutral)
+      --solute_wall_interaction SOLUTE_WALL_INTERACTION
+                            strength of solute membrane interaction, <35 means
+                            attractive, default=35
+      --dump_every DUMP_EVERY
+                            number of steps between writing snapshots of the
+                            particles, default is 1500
+      --steps STEPS         number of simulation steps, default is 100000
+      --membrane_lower_boundary MEMBRANE_LOWER_BOUNDARY
+                            the lower boundary of the membrane, this is used to
+                            compute flow rate, default=15
+      --solute_z_position SOLUTE_Z_POSITION
+                            the initial z position of the solutes, default=45
+      --sqrt_n_solutes SQRT_N_SOLUTES
+                            the square root of the number of solute particles,
+                            default=4
+
+
+The "resolution" flag allows you to specify the resolution for the output map in km. If you choose a resolution of \
+say 10 km, the program divides the grid up into square blocks of 10 km by 10 km, and calculates the average velocity \
+of each block. To see how this averaging is implemented see the "averageVectorField" method in the WindSpeedAnalysis class.
+The averaged velocity field is then output as a png to the output_path specified
+
+..
+
+The "adaptive_resolution" flag causes the program to determine a sensible resolution automatically by calculating \
+the approximate length scale over which velocities are correlated. This length scale is then used as the "resolution" \
+This feature is very slow and should be considered experimental.
+
+..
+
+The "vector_map" flag causes the program to produce a vector map image, which displays wind speeds and directions \
+as pointed arrows on a 2-d map. This map is block averaged in the same way and at the same resolution as the \
+scalar velocity field. You can specify the output of this figure with "vector_map_output".
+
+Example Usage
+-------------
+
+To generate a standard velocity map from time stamp 00 with a resolution of 50 km run:
+
+.. code-block:: bash
+
+    python generate_map.py --v_input_path=data/00_u.png --u_input_path=data/00_v.png --resolution=50 --output_path=windspeed50km.png
+
+To also generate a vector velocity map with the same resolution run:
+
+.. code-block:: bash
+
+    python generate_map.py --v_input_path=data/00_u.png --u_input_path=data/00_v.png --resolution=50 --output_path=windspeed50km.png --vector_map --vector_map_output=windspeedvectors50km.png
+
+
+To attempt to determine the appropriate resolution from the data run:
+
+.. code-block:: bash
+
+    python generate_map.py --v_input_path=data/00_u.png --u_input_path=data/00_v.png --adaptive_resolution --output_path=windspeed50km.png
+
+"""
+
 import argparse
 import os, sys
 import json
 sys.path.insert(0, os.path.abspath('../'))
-from porousMediaSimulation.dpdsimulation import DPDSimulation, Statistics 
+from porousMediaSimulation.dpdsimulation import DPDSimulation, Statistics
 
 
 def save_params(args):
