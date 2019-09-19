@@ -1,3 +1,9 @@
+r"""
+Contains the DPDSimulation class and the Statistics class
+
+"""
+
+
 import mirheo as mir
 import ctypes
 import matplotlib.pyplot as plt
@@ -7,6 +13,19 @@ import os
 #ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
 
 class Statistics(object):
+    """Initializes the Statistics object
+
+    Attributes
+    ----------
+    output: str
+       Path to the output directory for the simulation
+    flowrate_stats: Boolean
+       A boolean flag that causes the flowrate to be calculated, default=True
+    membrane_lower_boundary: float
+       the lower boundary of the membrane, used to compute flowrate
+    boxsize: float
+       the size of the (cubic) simulation box, default=50
+    """
     def __init__(self,output,flowrate_stats=True,membrane_lower_boundary=15,boxsize=50,\
             solvent_density_profile=True,solvent_velocity_profile=True,solute_density_profile=True,solute_velocity_profile=True):
         self.output=output
