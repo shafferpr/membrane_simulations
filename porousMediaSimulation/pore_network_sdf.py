@@ -1,13 +1,13 @@
 import numpy as np
 import math
-import sys
-import os
+import sys, os
+import json
 import argparse
 import multiprocessing
 
 
 class PoreNetwork(object):
-    def __init__(self,npores,boxsize,lowerc,upperc,poresizeceiling,poresizefloor,outputfile):
+    def __init__(self,npores,boxsize,lowerc,upperc,poresizeceiling,poresizefloor,outputpath):
         self.npores=npores
         self.boxsize=boxsize
         self.lowerc=lowerc
@@ -18,7 +18,7 @@ class PoreNetwork(object):
         self.pores=self.createPores()
         self.gridpores=self.createGridPores()
         self.throats=self.createThroats()
-        self.outputfile=outputfile
+        self.outputpath=outputpath
 
     def poresize(self,pore):
         psize=self.poresizefloor+(self.poresizeceiling-self.poresizefloor)*(pore[2]-float(self.lowerc))/float(self.upperc-self.lowerc)
@@ -122,13 +122,30 @@ class PoreNetwork(object):
 
     def output(self):
         qnp=np.asarray(self.qq,dtype=np.float32)
-        qnp.tofile("q.dat")
-        sizefile=self.outputfile.split('.')[0]
+        outputfile="%s/qq.dat"%self.outputpath
+        tempfile="%s/q.dat"%self.outputpath
+        qnp.tofile(tempfile)
+        sizefile=outputfile.split('.')[0]
         with open(sizefile,"w") as f:
             f.write("%d %d %d\n"%(self.boxsize,self.boxsize,self.boxsize))
             f.write("%d %d %d\n"%(self.boxsize/2,self.boxsize/2,self.boxsize/2))
-        os.system("cat %s q.dat >%s"%(sizefile,self.outputfile))
+        os.system("cat %s %s >%s"%(sizefile,tempfile,outputfile))
 
+    def generate_h5(self):
+        sys.path.insert(0, os.path.abspath('../'))
+        from porousMediaSimulation.dpdsimulation import DPDSimulation
+        outputfile="%s/qq.dat"%self.outputpath
+        simulation=DPDSimulation(membrane_input_file=outputfile,output_prefix=self.outputpath, \
+                                 box_size=self.boxsize, ranks=1)
+        simulation.drawWall()
+
+    def generate_image(self):
+        os.system("/usr/local/visit/bin/visit -cli -nowin -s /home/patrick/code/membrane_simulations/porousMediaSimulation/visit_script.py %s/wall.xmf"%self.outputpath)
+
+
+def save_params(args):
+    with open("%s/membrane_params.json"%args.outputpath, "w") as f:
+        json.dump(vars(args),f,indent=3)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='create a membrane structure')
@@ -138,12 +155,19 @@ if __name__ == '__main__':
     parser.add_argument('--upperc', type=int, dest='upperc',default=35,help="upper cutoff for the membrane structure in the box, default=35")
     parser.add_argument('--poresizeceiling', type=float, dest='poresizeceiling',default=8,help="largest pore size, near the top of the membrane, default=8")
     parser.add_argument('--poresizefloor',type=float, dest='poresizefloor',default=0.5,help="smallest pore size, near at the bottom of the membrane, default=0.5")
-    parser.add_argument('--outputfile',dest='outputfile',default='qq.dat',help="name of sdf outputfile, used as input to simulation, default=qq.dat")
+    parser.add_argument('--outputpath',dest='outputpath',default='membrane',help="output directory, used as input to simulation, default=membrane")
     parser.add_argument('--runparallel',dest='runparallel',action='store_true',default=False,help="run multiple threads in parallel, this does not require an argument, just include --runparallel to use this")
+    parser.add_argument('--create_image',dest='create_image',action='store_true',default=False,help="create a png image of the membrane using visit")
     args = parser.parse_args()
-    pn=PoreNetwork(npores=args.npores,boxsize=args.boxsize,lowerc=args.lowerc,upperc=args.upperc,poresizeceiling=args.poresizeceiling,poresizefloor=args.poresizefloor,outputfile=args.outputfile)
+    os.system("mkdir %s"%args.outputpath)
+    save_params(args)
+    pn=PoreNetwork(npores=args.npores,boxsize=args.boxsize,lowerc=args.lowerc,upperc=args.upperc,poresizeceiling=args.poresizeceiling,poresizefloor=args.poresizefloor,outputpath=args.outputpath)
     if args.runparallel:
         pn.QQ_parallel()
     else:
         pn.QQ()
     pn.output()
+
+    if args.create_image:
+        pn.generate_h5()
+        pn.generate_image()

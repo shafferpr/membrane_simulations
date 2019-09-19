@@ -1,0 +1,169 @@
+{% extends 'layout.html' %} ﻿{% block body %}
+
+
+{% if modelid != None %}
+
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-8">
+  <div class="mdc-card">
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Predictions</h1>
+    </section>
+    <section class="mdc-card__supporting-text pt-1">
+  {{ predict_script |safe }} {{ predict_div |safe }}
+</section>
+</div>
+</div>
+
+{% endif %}
+
+{% if prediction != None %}
+
+<div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-4">
+  <div class="mdc-card">
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Most Recent Prediction</h1>
+    </section>
+    <section class="mdc-card__supporting-text pt-1">
+
+  <table class="table table-hoverable">
+    <thead>
+      <tr>
+        <th class="mdl-data-table__cell--non-numeric">Analyte</th>
+        <th class="mdl-data-table__cell--non-numeric">Value</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+
+      {% for key, value in prediction.items() %}
+      <tr>
+
+        <td class="mdl-data-table__cell--non-numeric">{{ key|e }}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{ value|e }}</td>
+
+      </tr>
+      {% endfor %}
+
+
+    </tbody>
+
+  </table>
+
+</section>
+</div>
+</div>
+
+
+{% endif %}
+
+{% if active_experiment != None %}
+
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-8">
+  <div class="mdc-card">
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Active Experiment</h1>
+    </section>
+    <section class="mdc-card__supporting-text pt-1">
+
+  <table class="table table-hoverable">
+    <thead>
+      <tr>
+        <th class="mdl-data-table__cell--non-numeric">Name</th>
+        <th class="mdl-data-table__cell--non-numeric">Start Time</th>
+        <th class="mdl-data-table__cell--non-numeric">End Time</th>
+        <th class="mdl-data-table__cell--non-numeric">Frequency</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      <tr>
+
+        <td class="mdl-data-table__cell--non-numeric">{{active_experiment.exp_set.name}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{active_experiment.start_time|strftime}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{active_experiment.end_time|strftime}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{active_experiment.frequency}}</td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+</section>
+</div>
+</div>
+
+{% endif %}
+
+{% if modelid != None %}
+
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-8">
+  <div class="mdc-card">
+
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Historical Predictions</h1>
+    </section>
+
+  <form action='/exportpredictions/{{expid}}/{{modelid}}', method="post", id="anything">
+
+    <button type="submit" name="action" value="export" class="mdl-button mdl-js-button mdl-button--accent">Export Predictions</button>
+
+    <table class="table table-hoverable">
+      <thead>
+        <tr>
+          <th class="mdl-data-table__cell--non-numeric">Time</th>
+
+          {% for analyte in analytes %}
+          <th class="mdl-data-table__cell">{{ analyte }}</th>
+          {% endfor %}
+
+          <th class="mdl-data-table__cell">Good Measurement?</th>
+
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for time in times %}
+        <tr>
+          <td class="mdl-data-table__cell--non-numeric">{{ time|strftime }}</td>
+
+          {% for prediction in predictions[loop.index0] %}
+          <td class="mdl-data-table__cell">{{ prediction|round(2) }}</td>
+          {% endfor %}
+
+          <td class="mdl-data-table__cell">{{ quality[loop.index0] }}</td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+
+    </table>
+
+    <button type="submit" name="action" value="export" class="mdl-button mdl-js-button mdl-button--accent">Export Predictions</button>
+
+  </form>
+</div>
+
+</div>
+
+{% endif %}
+
+
+
+
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-8">
+  <div class="mdc-card">
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Most Recent Measurement</h1>
+    </section>
+    <section class="mdc-card__supporting-text pt-1">
+  {{ script |safe }} {{ div |safe }}
+</section>
+</div>
+</div>
+
+
+
+{% endblock %}

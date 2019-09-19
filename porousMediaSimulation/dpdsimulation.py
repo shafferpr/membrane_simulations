@@ -97,14 +97,14 @@ class Statistics(object):
 
 
 class DPDSimulation(object):
-    def __init__(self, membrane_input_file, output_prefix, box_size=80, composite_solute=True):
+    def __init__(self, membrane_input_file, output_prefix, box_size=80, composite_solute=True, ranks=2):
         ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
         self.membrane_input_file=membrane_input_file
         self.output_prefix=output_prefix
         self.box_size=box_size
         self.dt=0.01
         self.domain=(self.box_size,self.box_size,self.box_size)
-        self.u=mir.mirheo((2,1,1),self.domain,self.dt,debug_level=1,log_filename='log')
+        self.u=mir.mirheo((ranks,1,1),self.domain,self.dt,debug_level=1,log_filename='log')
         self.composite_solute=composite_solute
 
     def initializeSolvent(self, density, radius, force):

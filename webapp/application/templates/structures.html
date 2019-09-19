@@ -1,0 +1,111 @@
+{% extends 'layout.html' %} ﻿{% block body %}
+
+
+<div class="mdc-layout-grid__cell stretch-card mdc-layout-grid__cell--span-8">
+  <div class="mdc-card">
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Membrane Structures</h1>
+    </section>
+    <section class="mdc-card__supporting-text pt-1">
+
+  <table class="table table-hoverable">
+    <thead>
+      <tr>
+        <th class="mdl-data-table__cell--non-numeric">Structure Label</th>
+        <th class="mdl-data-table__cell--non-numeric">number of pores</th>
+        <th class="mdl-data-table__cell--non-numeric">boxsize</th>
+        <th class="mdl-data-table__cell--non-numeric">lower lower_bound</th>
+        <th class="mdl-data-table__cell--non-numeric">upper bound</th>
+        <th class="mdl-data-table__cell--non-numeric">pore size ceiling</th>
+        <th class="mdl-data-table__cell--non-numeric">pore size floor</th>
+      </tr>
+    </thead>
+    {% if structures != None %}
+    <tbody>
+      {% for structure in structures %}
+      <tr>
+
+        <td class="mdl-data-table__cell--non-numeric">{{structure.label}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{structure.nPores}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{structure.boxSize}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{structure.lowerC}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{structure.upperC}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{structure.powerSizeCeiling}}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{structure.poreSizeFloor}}</td>
+
+
+
+      </tr>
+      {% endfor %}
+    </tbody>
+    {% endif %}
+  </table>
+
+</section>
+</div>
+</div>
+
+<div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-4">
+  <div class="mdc-card">
+    <section class="mdc-card__primary">
+      <h1 class="mdc-card__title mdc-card__title--large">Create New Structure</h1>
+    </section>
+    <section class="mdc-card__supporting-text pt-1">
+
+        <form action='/structures', method="post", id="anything">
+          {{ form.hidden_tag() }}
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="name" name={{form.label.name}}>
+            <label class="mdl-textfield__label" for={{form.label.name}}>Structure Label</label>
+          </div>
+          <div></div>
+          {% for error in form.label.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="name" name={{form.npores.name}}>
+            <label class="mdl-textfield__label" for={{form.npores.name}}>Number of Pores</label>
+          </div>
+          <div></div>
+          {% for error in form.npores.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="name" name={{form.boxSize.name}}>
+            <label class="mdl-textfield__label" for={{form.boxSize.name}}>Number of Pores</label>
+          </div>
+          <div></div>
+          {% for error in form.boxSize.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+
+          <div>
+            <label for="exampleFormControlSelect1">Reference blank</label>
+
+            <select class="form-control" name={{form.blankId.name}} type="number">
+              <option value=''>None </option>
+              {% for blank in blanks %}
+              <option value={{blank.id}} type="number">{{blank.label}}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% for error in form.blankId.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+        </form>
+
+        <br />
+        <button type="submit" form="anything" class="mdc-button mdc-js-button mdc-button--raised mdc-js-ripple-effect mdc-button--accent">Create Membrane</button>
+
+    </section>
+  </div>
+</div>
+
+
+
+
+
+{% endblock %}

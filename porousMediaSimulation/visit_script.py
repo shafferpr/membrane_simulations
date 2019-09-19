@@ -1,4 +1,6 @@
-OpenDatabase("wall/wall.xmf")
+import sys
+OpenDatabase(sys.argv[1])
+#OpenDatabase("membrane/wall.xmf")
 AddPlot("Contour", "sdf")
 a=ContourAttributes()
 a.SetContourNLevels(1)
