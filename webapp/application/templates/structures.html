@@ -73,8 +73,8 @@
           {% endfor %}
 
           <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-            <input class="mdl-textfield__input" type="text" id="name" name={{form.boxSize.name}}>
-            <label class="mdl-textfield__label" for={{form.boxSize.name}}>Number of Pores</label>
+            <input class="mdl-textfield__input" type="number" id="name" name={{form.boxSize.name}}>
+            <label class="mdl-textfield__label" for={{form.boxSize.name}}>box size</label>
           </div>
           <div></div>
           {% for error in form.boxSize.errors %}
@@ -82,19 +82,43 @@
           {% endfor %}
 
 
-          <div>
-            <label for="exampleFormControlSelect1">Reference blank</label>
-
-            <select class="form-control" name={{form.blankId.name}} type="number">
-              <option value=''>None </option>
-              {% for blank in blanks %}
-              <option value={{blank.id}} type="number">{{blank.label}}</option>
-              {% endfor %}
-            </select>
+	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="number" id="name" name={{form.lowerC.name}}>
+            <label class="mdl-textfield__label" for={{form.lowerC.name}}>lower cutoff of membrane</label>
           </div>
-          {% for error in form.blankId.errors %}
+          <div></div>
+          {% for error in form.lowerC.errors %}
           <span style="color: red;">[{{ error }}]</span>
           {% endfor %}
+
+	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="number" id="name" name={{form.upperC.name}}>
+            <label class="mdl-textfield__label" for={{form.upperC.name}}>upper cutoff of membrane</label>
+          </div>
+          <div></div>
+          {% for error in form.upperC.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+
+	  
+	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="number" id="name" name={{form.poreSizeCeiling.name}}>
+            <label class="mdl-textfield__label" for={{form.poreSizeCeiling.name}}>pore size ceiling</label>
+          </div>
+          <div></div>
+          {% for error in form.poreSizeCeiling.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+	  
+	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="number" id="name" name={{form.poreSizeFloor.name}}>
+            <label class="mdl-textfield__label" for={{form.poreSizeFloor.name}}>pore size floor</label>
+          </div>
+          <div></div>
+          {% for error in form.poreSizeFloor.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}
+	  
         </form>
 
         <br />

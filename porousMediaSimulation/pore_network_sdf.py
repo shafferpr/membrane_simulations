@@ -140,7 +140,7 @@ class PoreNetwork(object):
         simulation.drawWall()
 
     def generate_image(self):
-        os.system("/usr/local/visit/bin/visit -cli -nowin -s /home/patrick/code/membrane_simulations/porousMediaSimulation/visit_script.py %s/wall.xmf"%self.outputpath)
+        os.system("/usr/local/visit/bin/visit -cli -nowin -s /home/shafferpr/membrane_simulations/porousMediaSimulation/visit_script.py %s/wall.xmf"%self.outputpath)
 
 
 def save_params(args):

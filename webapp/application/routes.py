@@ -1,4 +1,3 @@
-"""Currently handling all requests from webserver. Should be broken apart more"""
 from functools import wraps
 import json
 import numbers
@@ -26,7 +25,9 @@ from application import app
 
 from application.models import *
 from application.forms import *
-
+import sys
+sys.path.append('..')
+from porousMediaSimulation.pore_network_sdf import PoreNetwork
 
 from bokeh.embed import components
 from bokeh.plotting import figure, output_file, show
@@ -34,7 +35,7 @@ from bokeh.palettes import Category10
 
 
 #import pandas as pd
-import boto3, botocore
+
 from io import StringIO
 #import paho.mqtt.client as paho
 from bokeh.models.sources import AjaxDataSource, ColumnDataSource
@@ -65,7 +66,11 @@ def structures():
     form=StructuresForm()
     structures=MembraneStructure.query.order_by(MembraneStructure.id.desc()).limit(20).all()
     if form.validate_on_submit():
-        structure=MembraneStructure()
+        pn=PoreNetwork(npores=form.npores.data,boxsize=form.boxSize.data,lowerc=form.lowerC.data,upperc=form.upperC.data,poresizeceiling=form.poreSizeCeiling.data,poresizefloor=form.poreSizeFloor.data,outputpath=form.label.data)
+        pn.QQ_parallel()
+        pn.generate_h5()
+        pn.generate_image()
+        structure=MembraneStructure(label=form.label.data,nPores=form.npores.data,boxSize=form.boxSize.data,lowerC=form.lowerC.data,upperC=form.upperC.data,poreSizeCeiling=form.poreSizeCeiling.data,poreSizeFloor=form.poreSizeFloor.data)
         db.session.add(structure)
         db.session.commit()
         structures=MembraneStructure.query.order_by(MemraneStructure.id.desc()).limit(20).all()

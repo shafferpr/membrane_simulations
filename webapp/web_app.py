@@ -23,7 +23,7 @@ if __name__ == '__main__':
     # db.init_app(application)
     # sess.init_app(application)
     # application.run(host='0.0.0.0')
-    app.run()
+    app.run(host='0.0.0.0',port=80)
     #serve(app,host='0.0.0.0',port=8080) #use this when running in production
 # ui.run()  ##use this line when running as a desktop app
 # init_gui(application)
