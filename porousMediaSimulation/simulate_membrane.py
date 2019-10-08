@@ -80,9 +80,10 @@ import argparse
 import os, sys
 import json
 sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../webapp'))
 from porousMediaSimulation.dpdsimulation import DPDSimulation, Statistics
-from webapp.application.models import *
-from webapp.application import db
+from application.models import *
+from application import db
 
 def save_params(args,output):
     with open("%s/sim_params.json"%output, "w") as f:
@@ -125,7 +126,7 @@ if __name__ == '__main__':
 
 
     sim_db_entry=Simulations(label=args.label,solute_mesh=args.solute_mesh,solute_rigid_coords=args.solute_rigid_coords,solvent_force=args.solvent_force, \
-                             solute_solvent_interaction=args.solute_solvent_interaction,solute_wall_interaction=args.solute_wall_interaction,n_solutes=args.sqrt_n_solutes**2 \
+                             solute_solvent_interaction=args.solute_solvent_interaction,solute_wall_interaction=args.solute_wall_interaction,n_solutes=args.sqrt_n_solutes**2, \
                              steps=args.steps,status='started')
     db.session.add(sim_db_entry)
     db.session.commit()

@@ -105,5 +105,5 @@ def simulations():
 
 @app.route('/download_simulation/<int:simulationId>',methods=['Post'])
 def download_simulation(simulationId):
-    os.system("zip application/sim%d.zip ../../data/%d/*"%(simulationId,simulationId))
+    os.system("zip -r application/sim%d.zip ../data/%d/*"%(simulationId,simulationId))
     return send_file("sim%d.zip"%simulationId)

@@ -116,7 +116,7 @@ class Statistics(object):
 
 
 class DPDSimulation(object):
-    def __init__(self, membrane_input_file, output_prefix, box_size=80, composite_solute=True, ranks=2):
+    def __init__(self, membrane_input_file, output_prefix, box_size=80, composite_solute=True, ranks=1):
         ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
         self.membrane_input_file=membrane_input_file
         self.output_prefix=output_prefix
