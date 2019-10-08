@@ -85,6 +85,7 @@ from porousMediaSimulation.dpdsimulation import DPDSimulation, Statistics
 from application.models import *
 from application import db
 
+
 def save_params(args,output):
     with open("%s/sim_params.json"%output, "w") as f:
         json.dump(vars(args),f,indent=3)
@@ -93,8 +94,8 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser(description='generate a membrane structure from sdf file, and perform a DPD simulation')
     parser.add_argument('--label',dest='label',default='membrane_simulation',help='the label you want to give this simulation')
     parser.add_argument('--membrane_input_directory',dest='membrane_input_directory',default='membrane',help="sdf membrane structure inputfile")
-    parser.add_argument('--output',dest='output_prefix',default='sim_output',help="directory for all of the output files (including membrane geometry, \
-        particle trajectories, and stats files and figures)")
+    #parser.add_argument('--output',dest='output_prefix',default='sim_output',help="directory for all of the output files (including membrane geometry, \
+        #particle trajectories, and stats files and figures)")
     parser.add_argument('--box_size', type=int, dest='box_size',default=50,help="total boxsize for cubic box, default=50")
     parser.add_argument('--composite_solute',dest='composite_solute',action='store_true',default=True,help="include composite solute particles, \
         this does not require an argument, just include --composite_solute to use this")
@@ -124,29 +125,31 @@ if __name__ == '__main__':
     #if box_size_from_file != args.box_size:
         #raise RuntimeError("box size provided does not match box size in input file, input file says box size is %d"%box_size_from_file)
 
+    #comm=MPI.COMM_WORLD
+    #rank=comm.Get_rank()
 
-    sim_db_entry=Simulations(label=args.label,solute_mesh=args.solute_mesh,solute_rigid_coords=args.solute_rigid_coords,solvent_force=args.solvent_force, \
-                             solute_solvent_interaction=args.solute_solvent_interaction,solute_wall_interaction=args.solute_wall_interaction,n_solutes=args.sqrt_n_solutes**2, \
-                             steps=args.steps,status='started')
-    db.session.add(sim_db_entry)
-    db.session.commit()
-    sim_index=sim_db_entry.id
+    #sim_db_entry=Simulations(label=args.label,solute_mesh=args.solute_mesh,solute_rigid_coords=args.solute_rigid_coords,solvent_force=args.solvent_force, \
+                             #solute_solvent_interaction=args.solute_solvent_interaction,solute_wall_interaction=args.solute_wall_interaction,n_solutes=args.sqrt_n_solutes**2, \
+                             #steps=args.steps,status='started')
+    #db.session.add(sim_db_entry)
+    #db.session.commit()
+    #sim_index=sim_db_entry.id
     
-    os.system("mkdir ../data/%s"%sim_index)
-    save_params(args,"../data/%s"%sim_index)
     
-    #simulation=DPDSimulation(membrane_input_file=args.membrane_input_file,output_prefix=args.output_prefix,\
-        #box_size=args.box_size,composite_solute=args.composite_solute)
+
+    
+        #simulation=DPDSimulation(membrane_input_file=args.membrane_input_file,output_prefix=args.output_prefix,\
+            #box_size=args.box_size,composite_solute=args.composite_solute)
     membrane_input_file="%s/qq.dat"%args.membrane_input_directory
     
-    simulation=DPDSimulation(membrane_input_file=membrane_input_file,output_prefix="../data/%s"%sim_index,\
-        box_size=args.box_size,composite_solute=args.composite_solute)
-    
+    simulation=DPDSimulation(membrane_input_file=membrane_input_file,label=args.label,solute_mesh=args.solute_mesh, solute_rigid_coords=args.solute_rigid_coords, solvent_force=args.solvent_force, solute_solvent_interaction=args.solute_solvent_interaction, solute_wall_interaction=args.solute_wall_interaction, n_solutes=args.sqrt_n_solutes**2,\
+                             box_size=args.box_size,composite_solute=args.composite_solute)
+    save_params(args,simulation.output_prefix)
     #simulation.initializeSolute(density=args.solute_density,radius=args.solute_radius,force=args.solute_force)
     simulation.initializeSolvent(density=args.solvent_density,radius=args.solvent_radius,force=args.solvent_force)
     if args.composite_solute:
         simulation.initializeRigidSolute(a=args.solute_solvent_interaction, z_position=args.solute_z_position, \
-            num_particles_sqroot=args.sqrt_n_solutes, mesh_file=args.solute_mesh, coord_file=args.solute_rigid_coords)
+                                            num_particles_sqroot=args.sqrt_n_solutes, mesh_file=args.solute_mesh, coord_file=args.solute_rigid_coords)
     simulation.initializeWall(solute_interaction_strength=args.solute_wall_interaction)
     simulation.createOutput(dump_every=args.dump_every)
     #initialize the simulations statistics object
@@ -154,6 +157,4 @@ if __name__ == '__main__':
 
 
     simulation.runSimulation(steps=args.steps,stats_every=1000)
-    sim_db_entry2=Simulations.query.get(sim_index)
-    sim_db_entry2.status='finished'
-    db.session.commit()
+
