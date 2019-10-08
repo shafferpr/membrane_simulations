@@ -18,6 +18,7 @@
         <th class="mdl-data-table__cell--non-numeric">upper bound</th>
         <th class="mdl-data-table__cell--non-numeric">pore size ceiling</th>
         <th class="mdl-data-table__cell--non-numeric">pore size floor</th>
+        <th class="mdl-data-table__cell--non-numeric">view image</th>
       </tr>
     </thead>
     {% if structures != None %}
@@ -33,7 +34,19 @@
         <td class="mdl-data-table__cell--non-numeric">{{structure.poreSizeCeiling}}</td>
         <td class="mdl-data-table__cell--non-numeric">{{structure.poreSizeFloor}}</td>
 
+        <td>
+	  <form action="{{url_for('viewmembrane', membraneId=structure.id )}}" method="post">
+	    <input type="submit" value="view" class="mdl-button mdl-js-button mdl-button--accent">
+	  </form>
+	</td>
 
+	
+        <td>
+	  <form action="{{url_for('download_membrane', membraneId=structure.id )}}" method="post">
+	    <input type="submit" value="download" class="mdl-button mdl-js-button mdl-button--accent">
+	  </form>
+	</td>
+	
 
       </tr>
       {% endfor %}
@@ -118,6 +131,7 @@
           {% for error in form.poreSizeFloor.errors %}
           <span style="color: red;">[{{ error }}]</span>
           {% endfor %}
+
 	  
         </form>
 

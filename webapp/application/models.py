@@ -25,3 +25,16 @@ class MembraneStructure(db.Model):
         self.poreSizeFloor = poreSizeFloor
     def __repr__(self):
         return '<membrane structure %s %s %s %s %s %s %s>' % (self.label, self.nPores, self.boxSize, self.lowerC, self.upperC, self.powerSizeCeiling, self.poreSizeFloor)
+
+
+class Simulations(db.Model):
+    id=db.Column(db.Integer,primary_key=True)
+    label=db.Column(db.String(256),index=True,unique=False)
+    solute_mesh=db.Column(db.String(256),index=True,unique=False)
+    solute_rigid_coords=db.Column(db.String(256),index=True,unique=False)
+    solvent_force=db.Column(db.Float,index=True,unique=False)
+    solute_solvent_interaction=db.Column(db.Float,index=True,unique=False)
+    solute_wall_interaction=db.Column(db.Float,index=True,unique=False)
+    n_solutes=db.Column(db.Float,index=True,unique=False)
+    steps=db.Column(db.Float,index=True,unique=False)
+    status=db.Column(db.String(256),index=True,unique=False)

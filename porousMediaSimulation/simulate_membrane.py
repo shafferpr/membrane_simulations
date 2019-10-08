@@ -74,46 +74,6 @@ The output should look like this:
                             the square root of the number of solute particles,
                             default=4
 
-
-The "resolution" flag allows you to specify the resolution for the output map in km. If you choose a resolution of \
-say 10 km, the program divides the grid up into square blocks of 10 km by 10 km, and calculates the average velocity \
-of each block. To see how this averaging is implemented see the "averageVectorField" method in the WindSpeedAnalysis class.
-The averaged velocity field is then output as a png to the output_path specified
-
-..
-
-The "adaptive_resolution" flag causes the program to determine a sensible resolution automatically by calculating \
-the approximate length scale over which velocities are correlated. This length scale is then used as the "resolution" \
-This feature is very slow and should be considered experimental.
-
-..
-
-The "vector_map" flag causes the program to produce a vector map image, which displays wind speeds and directions \
-as pointed arrows on a 2-d map. This map is block averaged in the same way and at the same resolution as the \
-scalar velocity field. You can specify the output of this figure with "vector_map_output".
-
-Example Usage
--------------
-
-To generate a standard velocity map from time stamp 00 with a resolution of 50 km run:
-
-.. code-block:: bash
-
-    python generate_map.py --v_input_path=data/00_u.png --u_input_path=data/00_v.png --resolution=50 --output_path=windspeed50km.png
-
-To also generate a vector velocity map with the same resolution run:
-
-.. code-block:: bash
-
-    python generate_map.py --v_input_path=data/00_u.png --u_input_path=data/00_v.png --resolution=50 --output_path=windspeed50km.png --vector_map --vector_map_output=windspeedvectors50km.png
-
-
-To attempt to determine the appropriate resolution from the data run:
-
-.. code-block:: bash
-
-    python generate_map.py --v_input_path=data/00_u.png --u_input_path=data/00_v.png --adaptive_resolution --output_path=windspeed50km.png
-
 """
 
 import argparse
@@ -121,15 +81,17 @@ import os, sys
 import json
 sys.path.insert(0, os.path.abspath('../'))
 from porousMediaSimulation.dpdsimulation import DPDSimulation, Statistics
+from webapp.application.models import *
+from webapp.application import db
 
-
-def save_params(args):
-    with open("%s/sim_params.json"%args.output_prefix, "w") as f:
+def save_params(args,output):
+    with open("%s/sim_params.json"%output, "w") as f:
         json.dump(vars(args),f,indent=3)
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser(description='generate a membrane structure from sdf file, and perform a DPD simulation')
-    parser.add_argument('--inputfile',dest='membrane_input_file',default='qq.dat',help="sdf membrane structure inputfile")
+    parser.add_argument('--label',dest='label',default='membrane_simulation',help='the label you want to give this simulation')
+    parser.add_argument('--membrane_input_directory',dest='membrane_input_directory',default='membrane',help="sdf membrane structure inputfile")
     parser.add_argument('--output',dest='output_prefix',default='sim_output',help="directory for all of the output files (including membrane geometry, \
         particle trajectories, and stats files and figures)")
     parser.add_argument('--box_size', type=int, dest='box_size',default=50,help="total boxsize for cubic box, default=50")
@@ -151,16 +113,34 @@ if __name__ == '__main__':
     parser.add_argument('--solute_z_position', type=float, dest='solute_z_position', default=45, help="the initial z position of the solutes, default=45")
     parser.add_argument('--sqrt_n_solutes', type=int, dest='sqrt_n_solutes', default=4, help="the square root of the number of solute particles, default=4")
     args=parser.parse_args()
-    os.system("mkdir %s"%args.output_prefix)
-    save_params(args)
-    #check that box size from input and box size from sdf file are the same
-    with open(args.membrane_input_file.split('.')[0]) as f:
-        box_size_from_file = int(f.readline().split(' ')[0])
-    if box_size_from_file != args.box_size:
-        raise RuntimeError("box size provided does not match box size in input file, input file says box size is %d"%box_size_from_file)
+    #os.system("mkdir %s"%args.output_prefix)
+    #save_params(args)
 
-    simulation=DPDSimulation(membrane_input_file=args.membrane_input_file,output_prefix=args.output_prefix,\
+    #check that box size from input and box size from sdf file are the same
+
+    #with open(args.membrane_input_file.split('.')[0]) as f:
+        #box_size_from_file = int(f.readline().split(' ')[0])
+    #if box_size_from_file != args.box_size:
+        #raise RuntimeError("box size provided does not match box size in input file, input file says box size is %d"%box_size_from_file)
+
+
+    sim_db_entry=Simulations(label=args.label,solute_mesh=args.solute_mesh,solute_rigid_coords=args.solute_rigid_coords,solvent_force=args.solvent_force, \
+                             solute_solvent_interaction=args.solute_solvent_interaction,solute_wall_interaction=args.solute_wall_interaction,n_solutes=args.sqrt_n_solutes**2 \
+                             steps=args.steps,status='started')
+    db.session.add(sim_db_entry)
+    db.session.commit()
+    sim_index=sim_db_entry.id
+    
+    os.system("mkdir ../data/%s"%sim_index)
+    save_params(args,"../data/%s"%sim_index)
+    
+    #simulation=DPDSimulation(membrane_input_file=args.membrane_input_file,output_prefix=args.output_prefix,\
+        #box_size=args.box_size,composite_solute=args.composite_solute)
+    membrane_input_file="%s/qq.dat"%args.membrane_input_directory
+    
+    simulation=DPDSimulation(membrane_input_file=membrane_input_file,output_prefix="../data/%s"%sim_index,\
         box_size=args.box_size,composite_solute=args.composite_solute)
+    
     #simulation.initializeSolute(density=args.solute_density,radius=args.solute_radius,force=args.solute_force)
     simulation.initializeSolvent(density=args.solvent_density,radius=args.solvent_radius,force=args.solvent_force)
     if args.composite_solute:
@@ -171,4 +151,8 @@ if __name__ == '__main__':
     #initialize the simulations statistics object
     simulation.statistics()
 
+
     simulation.runSimulation(steps=args.steps,stats_every=1000)
+    sim_db_entry2=Simulations.query.get(sim_index)
+    sim_db_entry2.status='finished'
+    db.session.commit()
