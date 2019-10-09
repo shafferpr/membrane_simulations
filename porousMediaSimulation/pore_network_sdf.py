@@ -125,7 +125,8 @@ class PoreNetwork(object):
         outputfile="%s/qq.dat"%self.outputpath
         tempfile="%s/q.dat"%self.outputpath
         qnp.tofile(tempfile)
-        sizefile=outputfile.split('.')[0]
+        sizefile="%s/qq"%self.outputpath
+        #sizefile=outputfile.split('.')[0]
         with open(sizefile,"w") as f:
             f.write("%d %d %d\n"%(self.boxsize,self.boxsize,self.boxsize))
             f.write("%d %d %d\n"%(self.boxsize/2,self.boxsize/2,self.boxsize/2))
@@ -135,7 +136,7 @@ class PoreNetwork(object):
         sys.path.insert(0, os.path.abspath('../'))
         from porousMediaSimulation.dpdsimulation import DPDSimulation
         outputfile="%s/qq.dat"%self.outputpath
-        simulation=DPDSimulation(membrane_input_file=outputfile,output_prefix=self.outputpath, \
+        simulation=DPDSimulation(membrane_input_file=outputfile,label=self.outputpath, \
                                  box_size=self.boxsize, ranks=1)
         simulation.drawWall()
 

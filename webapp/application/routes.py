@@ -70,13 +70,13 @@ def structures():
         structure=MembraneStructure(label=form.label.data,nPores=form.npores.data,boxSize=form.boxSize.data,lowerC=form.lowerC.data,upperC=form.upperC.data,poreSizeCeiling=form.poreSizeCeiling.data,poreSizeFloor=form.poreSizeFloor.data)
         db.session.add(structure)
         db.session.commit()
-        os.system("mkdir %d"%structure.id)
-        pn=PoreNetwork(npores=form.npores.data,boxsize=form.boxSize.data,lowerc=form.lowerC.data,upperc=form.upperC.data,poresizeceiling=form.poreSizeCeiling.data,poresizefloor=form.poreSizeFloor.data,outputpath=structure.id)
+        os.system("mkdir ../membranes/%s"%structure.id)
+        pn=PoreNetwork(npores=form.npores.data,boxsize=form.boxSize.data,lowerc=form.lowerC.data,upperc=form.upperC.data,poresizeceiling=form.poreSizeCeiling.data,poresizefloor=form.poreSizeFloor.data,outputpath="../membranes/%s"%structure.id)
         pn.QQ_parallel()
         pn.output()
         pn.generate_h5()
         pn.generate_image()
-        os.system("mv visit0000.png %d/image.png"%structure.id)
+        os.system("mv visit0000.png ../membranes/%s/image.png"%structure.id)
         structures=MembraneStructure.query.order_by(MembraneStructure.id.desc()).limit(20).all()
         return render_template('structures.html',structures=structures, form=form)
 
@@ -85,7 +85,7 @@ def structures():
 
 @app.route('/viewmembrane/<int:membraneId>',methods=['POST'])
 def viewmembrane(membraneId):
-    os.system("cp %d/image.png application/static/images/%d.png"%(membraneId,membraneId))
+    os.system("cp ../membranes/%s/image.png application/static/images/%d.png"%(membraneId,membraneId))
     source="images/%d.png"%membraneId
     image_file=url_for('static',filename=source)
     return render_template('membrane_image.html',image_file=image_file)
@@ -93,7 +93,7 @@ def viewmembrane(membraneId):
 
 @app.route('/download_membrane/<int:membraneId>',methods=['POST'])
 def download_membrane(membraneId):
-    os.system("zip application/%d.zip %d/*"%(membraneId,membraneId))
+    os.system("zip application/%d.zip ../membranes/%s/*"%(membraneId,membraneId))
     return send_file("%d.zip"%membraneId)
 
 

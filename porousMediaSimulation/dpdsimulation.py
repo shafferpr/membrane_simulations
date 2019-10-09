@@ -120,7 +120,7 @@ class Statistics(object):
 
 
 class DPDSimulation(object):
-    def __init__(self, membrane_input_file, label, solute_mesh='', solute_rigid_coords='', solvent_force=0, solute_solvent_interaction=0, solute_wall_interaction=0, n_solutes=0, box_size=80, composite_solute=True, ranks=1):
+    def __init__(self, membrane_input_file, label, solute_mesh='', solute_rigid_coords='', solvent_force=0, solute_solvent_interaction=0, solute_wall_interaction=0, n_solutes=0, box_size=80, nsteps=0, composite_solute=True, ranks=1):
         ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
         self.membrane_input_file=membrane_input_file
         self.output_prefix=label
@@ -132,15 +132,16 @@ class DPDSimulation(object):
         comm=MPI.COMM_WORLD
         rank=comm.Get_rank()
         print(rank)
-        if rank==0:
-            sim_db_entry=Simulations(label=label,solute_mesh=solute_mesh, solute_rigid_coords=solute_rigid_coords, solvent_force=solvent_force, solute_solvent_interaction=solute_solvent_interaction,solute_wall_interaction=solute_wall_interaction, n_solutes=n_solutes,status='started')
+        if rank==1:
+            sim_db_entry=Simulations(label=label,solute_mesh=solute_mesh, solute_rigid_coords=solute_rigid_coords, solvent_force=solvent_force, solute_solvent_interaction=solute_solvent_interaction,solute_wall_interaction=solute_wall_interaction, n_solutes=n_solutes,steps=nsteps,status='started')
             db.session.add(sim_db_entry)
             db.session.commit()
             self.output_prefix="../data/%s"%sim_db_entry.id
             self.sim_index=sim_db_entry.id
             print(sim_db_entry.id)
             print("updating db")
-        #self.output_prefix=label
+        if comm.Get_size()==1:
+            self.output_prefix=label
         os.system("mkdir %s"%self.output_prefix)
             
     def initializeSolvent(self, density, radius, force):
@@ -294,7 +295,7 @@ class DPDSimulation(object):
             self.Statistics.plot()
         comm=MPI.COMM_WORLD
         rank=comm.Get_rank()
-        if rank ==0:
+        if rank == 1:
             sim_db_entry2=Simulations.query.get(self.sim_index)
             sim_db_entry2.status='finished'
             db.session.commit()
