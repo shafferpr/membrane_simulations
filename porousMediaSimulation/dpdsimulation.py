@@ -5,6 +5,7 @@ Contains the DPDSimulation class and the Statistics class
 
 
 import mirheo as mir
+from mpi4py import MPI
 import ctypes
 import matplotlib.pyplot as plt
 import trimesh
@@ -128,7 +129,10 @@ class DPDSimulation(object):
         self.domain=(self.box_size,self.box_size,self.box_size)
         self.u=mir.mirheo((ranks,1,1),self.domain,self.dt,debug_level=3,log_filename='log2')
         self.composite_solute=composite_solute
-        if self.u.isMasterTask():
+        comm=MPI.COMM_WORLD
+        rank=comm.Get_rank()
+        print(rank)
+        if rank==0:
             sim_db_entry=Simulations(label=label,solute_mesh=solute_mesh, solute_rigid_coords=solute_rigid_coords, solvent_force=solvent_force, solute_solvent_interaction=solute_solvent_interaction,solute_wall_interaction=solute_wall_interaction, n_solutes=n_solutes,status='started')
             db.session.add(sim_db_entry)
             db.session.commit()
@@ -136,7 +140,7 @@ class DPDSimulation(object):
             self.sim_index=sim_db_entry.id
             print(sim_db_entry.id)
             print("updating db")
-        self.output_prefix=label
+        #self.output_prefix=label
         os.system("mkdir %s"%self.output_prefix)
             
     def initializeSolvent(self, density, radius, force):
@@ -253,12 +257,9 @@ class DPDSimulation(object):
         self.u.registerPlugins(mir.Plugins.createDumpAverage('field2', [self.pv_rigid],
                                                 50, 10000, (1.0, 1.0, 1.0),
                                                 [("velocity", "vector_from_float4")], '%s/velocity/solute-'%self.output_prefix))
-        print("registering particle plugin")
-        print(dump_every)
-        print('%s/particles/solvent_particles-'%self.output_prefix)
-        os.system("mkdir %s/particles"%self.output_prefix)
+
         self.u.registerPlugins(mir.Plugins.createDumpParticles('part_dump', self.solvent_pv, dump_every, [], '%s/particles/solvent_particles-'%self.output_prefix))
-        print("particlue plugin registered")
+
         if self.composite_solute:
             self.u.registerPlugins(mir.Plugins.createDumpParticles('rigid_dump', self.pv_rigid, dump_every, [], '%s/particles/solute_particles-'%self.output_prefix))
         #if self.solvent_radius > 0.0:
@@ -280,9 +281,7 @@ class DPDSimulation(object):
         for i in range(int(steps/stats_every)):
             if self.u.isMasterTask():
                 particle_zpositions_old=[x[0] for x in self.solvent_pv.getCoordinates()]
-                print("master task")
-            else:
-                print("not master task")
+
             self.u.run(stats_every)
             if self.u.isMasterTask():
                 particle_zpositions_new=[x[0] for x in self.solvent_pv.getCoordinates()]
@@ -293,6 +292,9 @@ class DPDSimulation(object):
                 self.Statistics.calculate(particle_zpositions_old,particle_zpositions_new,particle_velocities,solute_zpositions,solute_velocities,i*stats_every)
         if self.u.isMasterTask():
             self.Statistics.plot()
+        comm=MPI.COMM_WORLD
+        rank=comm.Get_rank()
+        if rank ==0:
             sim_db_entry2=Simulations.query.get(self.sim_index)
             sim_db_entry2.status='finished'
             db.session.commit()
