@@ -7,25 +7,26 @@ import multiprocessing
 
 
 class PoreNetwork(object):
-    def __init__(self,npores,boxsize,lowerc,upperc,poresizeceiling,poresizefloor,outputpath):
+    def __init__(self,npores,boxsize,lowerc,upperc,poresizeceiling,poresizefloor,outputpath,z_scale_factor):
         self.npores=npores
         self.boxsize=boxsize
         self.lowerc=lowerc
         self.upperc=upperc
         self.poresizeceiling=poresizeceiling
         self.poresizefloor=poresizefloor
+        self.z_scale_factor=z_scale_factor
         self.q=self.createGrid()
         self.pores=self.createPores()
         self.gridpores=self.createGridPores()
-        self.throats=self.createThroats()
+        self.throats=self.createThroats(self.z_scale_factor)
         self.outputpath=outputpath
 
     def poresize(self,pore):
         psize=self.poresizefloor+(self.poresizeceiling-self.poresizefloor)*(pore[2]-float(self.lowerc))/float(self.upperc-self.lowerc)
         return psize
 
-    def distance(self,p1,p2):
-        return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+(p1[2]-p2[2])**2)
+    def distance(self,p1,p2,z_scale_factor=1.0):
+        return math.sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2+z_scale_factor*(p1[2]-p2[2])**2)
 
     def norm(self,p1):
         return p1[0]**2+p1[1]**2+p1[2]**2
@@ -52,15 +53,15 @@ class PoreNetwork(object):
                 gridpores.append([x,y,self.lowerc])
         return np.asarray(gridpores)
 
-    def createThroats(self):
+    def createThroats(self,z_scale_factor):
         throats=[]
         for idx, pore in enumerate(self.pores):
-            distances=[self.distance(pore,x) for x in self.pores]
+            distances=[self.distance(pore,x,z_scale_factor) for x in self.pores]
             neighbors=np.argsort(distances)
             throats.append([idx,neighbors[1]])
             throats.append([idx,neighbors[2]])
         for idx, pore in enumerate(self.gridpores):
-            distances=[self.distance(pore,x) for x in self.pores]
+            distances=[self.distance(pore,x,z_scale_factor) for x in self.pores]
             neighbors=np.argsort(distances)
             throats.append([idx+self.npores,neighbors[0]])
         self.pores=np.vstack([self.pores,self.gridpores])
@@ -142,7 +143,7 @@ class PoreNetwork(object):
 
     def generate_image(self):
         os.system("/usr/local/visit/bin/visit -cli -nowin -s /home/shafferpr/membrane_simulations/porousMediaSimulation/visit_script.py %s/wall.xmf"%self.outputpath)
-
+        os.system("mv visit0000.png %s/."%self.outputpath)
 
 def save_params(args):
     with open("%s/membrane_params.json"%args.outputpath, "w") as f:
@@ -155,6 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('--lowerc', type=int, dest='lowerc',default=15,help="lower cutoff for the membrane structure in the box, default=15")
     parser.add_argument('--upperc', type=int, dest='upperc',default=35,help="upper cutoff for the membrane structure in the box, default=35")
     parser.add_argument('--poresizeceiling', type=float, dest='poresizeceiling',default=8,help="largest pore size, near the top of the membrane, default=8")
+    parser.add_argument('--z_scale_factor', type=float, dest='z_scale_factor',default=1.0,help="making this quantity small (less than 1.0) makes it so that throats tend to be vertical")
     parser.add_argument('--poresizefloor',type=float, dest='poresizefloor',default=0.5,help="smallest pore size, near at the bottom of the membrane, default=0.5")
     parser.add_argument('--outputpath',dest='outputpath',default='membrane',help="output directory, used as input to simulation, default=membrane")
     parser.add_argument('--runparallel',dest='runparallel',action='store_true',default=False,help="run multiple threads in parallel, this does not require an argument, just include --runparallel to use this")
@@ -162,7 +164,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     os.system("mkdir %s"%args.outputpath)
     save_params(args)
-    pn=PoreNetwork(npores=args.npores,boxsize=args.boxsize,lowerc=args.lowerc,upperc=args.upperc,poresizeceiling=args.poresizeceiling,poresizefloor=args.poresizefloor,outputpath=args.outputpath)
+    pn=PoreNetwork(npores=args.npores,boxsize=args.boxsize,lowerc=args.lowerc,upperc=args.upperc,poresizeceiling=args.poresizeceiling,poresizefloor=args.poresizefloor,outputpath=args.outputpath,z_scale_factor=args.z_scale_factor)
     if args.runparallel:
         pn.QQ_parallel()
     else:

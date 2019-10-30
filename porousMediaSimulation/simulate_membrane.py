@@ -141,9 +141,10 @@ if __name__ == '__main__':
         #simulation=DPDSimulation(membrane_input_file=args.membrane_input_file,output_prefix=args.output_prefix,\
             #box_size=args.box_size,composite_solute=args.composite_solute)
     membrane_input_file="%s/qq.dat"%args.membrane_input_directory
-    
+    print(membrane_input_file)
     simulation=DPDSimulation(membrane_input_file=membrane_input_file,label=args.label,solute_mesh=args.solute_mesh, solute_rigid_coords=args.solute_rigid_coords, solvent_force=args.solvent_force, solute_solvent_interaction=args.solute_solvent_interaction, solute_wall_interaction=args.solute_wall_interaction, n_solutes=args.sqrt_n_solutes**2,\
                              box_size=args.box_size,nsteps=args.steps,composite_solute=args.composite_solute)
+    print("initialized")
     save_params(args,simulation.output_prefix)
     #simulation.initializeSolute(density=args.solute_density,radius=args.solute_radius,force=args.solute_force)
     simulation.initializeSolvent(density=args.solvent_density,radius=args.solvent_radius,force=args.solvent_force)

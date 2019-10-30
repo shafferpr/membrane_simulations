@@ -13,3 +13,5 @@ class StructuresForm(FlaskForm):
     upperC = FloatField('upperC', validators=[Optional()], filters=[lambda x : 35 if x is None else x])
     poreSizeCeiling = FloatField('poreSizeCeiling', validators=[Optional()], filters=[lambda x : 5 if x is None else x])
     poreSizeFloor = FloatField('poreSizeFloor', validators=[Optional()], filters=[lambda x : 0.5 if x is None else x])
+    zScaleFactor = FloatField('zScaleFactor', validators=[Optional()], filters=[lambda x: 1.0 if x is None else x])
+

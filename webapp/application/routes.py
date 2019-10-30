@@ -67,11 +67,11 @@ def structures():
     structures=MembraneStructure.query.order_by(MembraneStructure.id.desc()).limit(20).all()
     if form.validate_on_submit():
 
-        structure=MembraneStructure(label=form.label.data,nPores=form.npores.data,boxSize=form.boxSize.data,lowerC=form.lowerC.data,upperC=form.upperC.data,poreSizeCeiling=form.poreSizeCeiling.data,poreSizeFloor=form.poreSizeFloor.data)
+        structure=MembraneStructure(label=form.label.data,nPores=form.npores.data,boxSize=form.boxSize.data,lowerC=form.lowerC.data,upperC=form.upperC.data,poreSizeCeiling=form.poreSizeCeiling.data,poreSizeFloor=form.poreSizeFloor.data,zScaleFactor=form.zScaleFactor.data)
         db.session.add(structure)
         db.session.commit()
         os.system("mkdir ../membranes/%s"%structure.id)
-        pn=PoreNetwork(npores=form.npores.data,boxsize=form.boxSize.data,lowerc=form.lowerC.data,upperc=form.upperC.data,poresizeceiling=form.poreSizeCeiling.data,poresizefloor=form.poreSizeFloor.data,outputpath="../membranes/%s"%structure.id)
+        pn=PoreNetwork(npores=form.npores.data,boxsize=form.boxSize.data,lowerc=form.lowerC.data,upperc=form.upperC.data,poresizeceiling=form.poreSizeCeiling.data,poresizefloor=form.poreSizeFloor.data,outputpath="../membranes/%s"%structure.id, z_scale_factor=form.zScaleFactor.data)
         pn.QQ_parallel()
         pn.output()
         pn.generate_h5()

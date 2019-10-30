@@ -18,6 +18,7 @@
         <th class="mdl-data-table__cell--non-numeric">upper bound</th>
         <th class="mdl-data-table__cell--non-numeric">pore size ceiling</th>
         <th class="mdl-data-table__cell--non-numeric">pore size floor</th>
+        <th class="mdl-data-table__cell--non-numeric">z scale factor</th>
         <th class="mdl-data-table__cell--non-numeric">view image</th>
       </tr>
     </thead>
@@ -33,7 +34,7 @@
         <td class="mdl-data-table__cell--non-numeric">{{structure.upperC}}</td>
         <td class="mdl-data-table__cell--non-numeric">{{structure.poreSizeCeiling}}</td>
         <td class="mdl-data-table__cell--non-numeric">{{structure.poreSizeFloor}}</td>
-
+        <td class="mdl-data-table__cell--non-numeric">{{structure.zScaleFactor}}</td>
         <td>
 	  <form action="{{url_for('viewmembrane', membraneId=structure.id )}}" method="post">
 	    <input type="submit" value="view" class="mdl-button mdl-js-button mdl-button--accent">
@@ -115,16 +116,18 @@
 
 	  
 	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-            <input class="mdl-textfield__input" type="number" id="name" name={{form.poreSizeCeiling.name}}>
+            <input class="mdl-textfield__input" type="number" step="0.01" id="name" name={{form.poreSizeCeiling.name}}>
             <label class="mdl-textfield__label" for={{form.poreSizeCeiling.name}}>pore size ceiling</label>
           </div>
           <div></div>
           {% for error in form.poreSizeCeiling.errors %}
           <span style="color: red;">[{{ error }}]</span>
           {% endfor %}
+
+
 	  
 	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-            <input class="mdl-textfield__input" type="number" id="name" name={{form.poreSizeFloor.name}}>
+            <input class="mdl-textfield__input" type="number" step="0.01" id="name" name={{form.poreSizeFloor.name}}>
             <label class="mdl-textfield__label" for={{form.poreSizeFloor.name}}>pore size floor</label>
           </div>
           <div></div>
@@ -132,6 +135,15 @@
           <span style="color: red;">[{{ error }}]</span>
           {% endfor %}
 
+
+	  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="number" step="0.01" id="name" name={{form.zScaleFactor.name}}>
+            <label class="mdl-textfield__label" for={{form.zScaleFactor.name}}>z scale factor</label>
+          </div>
+          <div></div>
+          {% for error in form.zScaleFactor.errors %}
+          <span style="color: red;">[{{ error }}]</span>
+          {% endfor %}	  
 	  
         </form>
 

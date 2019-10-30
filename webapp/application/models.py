@@ -15,7 +15,8 @@ class MembraneStructure(db.Model):
     upperC=db.Column(db.Float,index=True,unique=False)
     poreSizeCeiling=db.Column(db.Float,index=True,unique=False)
     poreSizeFloor=db.Column(db.Float,index=True,unique=False)
-    def __init__(self, label, nPores, boxSize, lowerC, upperC, poreSizeCeiling, poreSizeFloor):
+    zScaleFactor=db.Column(db.Float,index=True,unique=False)
+    def __init__(self, label, nPores, boxSize, lowerC, upperC, poreSizeCeiling, poreSizeFloor,zScaleFactor):
         self.label=label
         self.nPores = nPores
         self.boxSize = boxSize
@@ -23,8 +24,9 @@ class MembraneStructure(db.Model):
         self.upperC = upperC
         self.poreSizeCeiling = poreSizeCeiling
         self.poreSizeFloor = poreSizeFloor
+        self.zScaleFactor = zScaleFactor
     def __repr__(self):
-        return '<membrane structure %s %s %s %s %s %s %s>' % (self.label, self.nPores, self.boxSize, self.lowerC, self.upperC, self.powerSizeCeiling, self.poreSizeFloor)
+        return '<membrane structure %s %s %s %s %s %s %s %s>' % (self.label, self.nPores, self.boxSize, self.lowerC, self.upperC, self.powerSizeCeiling, self.poreSizeFloor, self.zScaleFactor)
 
 
 class Simulations(db.Model):
