@@ -7,7 +7,7 @@ import trimesh
 dt = 0.001
 rc = 1.0
 mass = 1.0
-density = 10
+density = 5
 
 m = trimesh.load("sphere_mesh2.off");
 inertia = [row[i] for i, row in enumerate(m.moment_inertia)]

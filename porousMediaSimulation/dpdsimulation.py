@@ -89,6 +89,7 @@ class Statistics(object):
         hist=np.histogram(self.all_solute_positions,bins=int(self.boxsize))
         plt.hist(self.all_solute_positions,bins='auto')
         plt.savefig("%s/stats/solute_density.png"%self.output)
+        np.save("%s/stats/solute_density"%self.output,hist)
         plt.close()
 
     def plot_solvent_density_profiles(self):
@@ -120,7 +121,7 @@ class Statistics(object):
 
 
 class DPDSimulation(object):
-    def __init__(self, membrane_input_file, label, solute_mesh='', solute_rigid_coords='', solvent_force=0, solute_solvent_interaction=0, solute_wall_interaction=0, n_solutes=0, box_size=80, nsteps=0, composite_solute=True, ranks=1):
+    def __init__(self, membrane_input_file, label, solute_mesh='', solute_rigid_coords='', solvent_force=0, solute_solvent_interaction=0, solute_wall_interaction=0, n_solutes=0, box_size=80, nsteps=0, composite_solute=True, ranks=1, db_flag=True):
         ctypes.CDLL("libmpi.so", mode=ctypes.RTLD_GLOBAL)
         self.membrane_input_file=membrane_input_file
         self.label=label
@@ -130,19 +131,21 @@ class DPDSimulation(object):
         self.domain=(self.box_size,self.box_size,self.box_size)
         self.u=mir.mirheo((ranks,1,1),self.domain,self.dt,debug_level=2)
         self.composite_solute=composite_solute
+        self.db_flag=db_flag
         comm=MPI.COMM_WORLD
         rank=comm.Get_rank()
         print(rank,"rank")
-        if rank==1:
-            sim_db_entry=Simulations(label=label,solute_mesh=solute_mesh, solute_rigid_coords=solute_rigid_coords, solvent_force=solvent_force, solute_solvent_interaction=solute_solvent_interaction,solute_wall_interaction=solute_wall_interaction, n_solutes=n_solutes,steps=nsteps,status='started')
-            db.session.add(sim_db_entry)
-            db.session.commit()
-            self.output_prefix="../data/%s"%sim_db_entry.id
-            self.sim_index=sim_db_entry.id
-            print(sim_db_entry.id)
-            print("updating db")
-        if comm.Get_size()==1:
-            self.output_prefix=label
+        if not self.db_flag:
+            if rank==1:
+                sim_db_entry=Simulations(label=label,solute_mesh=solute_mesh, solute_rigid_coords=solute_rigid_coords, solvent_force=solvent_force, solute_solvent_interaction=solute_solvent_interaction,solute_wall_interaction=solute_wall_interaction, n_solutes=n_solutes,steps=nsteps,status='started')
+                db.session.add(sim_db_entry)
+                db.session.commit()
+                self.output_prefix="../data/%s"%sim_db_entry.id
+                self.sim_index=sim_db_entry.id
+                print(sim_db_entry.id)
+                print("updating db")
+            if comm.Get_size()==1:
+                self.output_prefix=label
         os.system("mkdir %s"%self.output_prefix)
             
     def initializeSolvent(self, density, radius, force):
@@ -176,6 +179,7 @@ class DPDSimulation(object):
     def initializeRigidSolute(self,coord_file="rigid_coords.txt", mesh_file="sphere_mesh2.off", num_particles_sqroot=4, a=20, z_position=45):
         xy=np.arange(5,self.box_size,self.box_size/num_particles_sqroot)
         com_q=[]
+        print(xy)
         for x in xy:
             for y in xy:
                 com_q.append([z_position, x, y, 1.0, 0.0, 0.0, 0.0])
@@ -194,9 +198,11 @@ class DPDSimulation(object):
         self.ic_rigid = mir.InitialConditions.Rigid(com_q, self.rigid_coords)
         self.vv_rigid = mir.Integrators.RigidVelocityVerlet("vv_rigid")
         self.u.registerParticleVector(self.pv_rigid, self.ic_rigid)
+
         self.solvent_rigid_dpd = mir.Interactions.DPD('dpd', self.solvent_radius, a=a, gamma=4, kbt=1.0, power=0.5)
-        # repulsive LJ to avoid overlap between spheres
-        self.cnt = mir.Interactions.LJ('cnt', self.solvent_radius, epsilon=0.35, sigma=0.8, max_force=400.0)
+        #repulsive LJ to avoid overlap between spheres
+        #self.cnt = mir.Interactions.LJ('cnt', self.solvent_radius, epsilon=0.35, sigma=0.8, max_force=400.0)
+        self.cnt=mir.Interactions.DPD('dpd2', self.solvent_radius, a=a, gamma=4, kbt=1.0, power=0.5)
         self.u.registerPlugins(mir.Plugins.createAddForce('solute_force', self.pv_rigid, force=[self.solvent_force,0.0,0.0]))
         self.u.registerInteraction(self.cnt)
         self.u.registerInteraction(self.solvent_rigid_dpd)
@@ -210,6 +216,7 @@ class DPDSimulation(object):
         self.u.registerObjectBelongingChecker(self.belonging_checker, self.pv_rigid)
         self.u.applyObjectBelongingChecker(self.belonging_checker, self.solvent_pv, correct_every=0, inside="none", outside="")
 
+        
 
 
     def setSoluteSolventInteraction(self,interaction_strength):
@@ -222,20 +229,22 @@ class DPDSimulation(object):
         self.wall = mir.Walls.SDF("sdfwall",sdfFilename=self.membrane_input_file)
         self.u.registerWall(self.wall) # register the wall in the coordinator
         # we now create the frozen particles of the walls
-        self.pv_wall = self.u.makeFrozenWallParticles(pvName="wall", walls=[self.wall], interactions=[self.solvent_dpd], integrator=self.solvent_vv, density=3)
+        self.solvent_wall_dpd=mir.Interactions.DPD('solvent_wall_dpd', self.solvent_radius, a=40, gamma=4, kbt=1.0, power=0.5)
+        self.u.registerInteraction(self.solvent_wall_dpd)
+        self.pv_wall = self.u.makeFrozenWallParticles(pvName="wall", walls=[self.wall], interactions=[self.solvent_wall_dpd], integrator=self.solvent_vv, density=5)
         # set the wall for pv
         # this is required for non-penetrability of the solvent thanks to bounce-back
         # this will also remove the initial particles which are not inside the wall geometry
         self.u.setWall(self.wall, self.solvent_pv)
 
         #set the interaction between the solute particle vector and the wall pv, and the interaction between the solvent particle vectors and the wall particle vectors
-        self.u.setInteraction(self.solvent_dpd, self.solvent_pv, self.pv_wall)
+        self.u.setInteraction(self.solvent_wall_dpd, self.solvent_pv, self.pv_wall)
 
         if self.composite_solute:
             #self.solute_wall_lj = mir.Interactions.LJ('solute_wall_lj', self.solvent_radius, epsilon=0.35, sigma=0.8, max_force=400.0)
             self.solute_wall_dpd = mir.Interactions.DPD('solute_wall_dpd', self.solvent_radius, a=solute_interaction_strength, gamma=4, kbt=1.0, power=0.5)
             self.u.registerPlugins(mir.Plugins.createWallRepulsion('wall_repulsion', self.pv_rigid, self.wall, C=200, h=0.4, max_force=2000))
-
+            self.u.registerPlugins(mir.Plugins.createWallRepulsion('wall_repulsion2', self.solvent_pv, self.wall, C=200, h=0.4, max_force=2000))
             self.u.registerInteraction(self.solute_wall_dpd)
             self.u.setInteraction(self.solute_wall_dpd, self.pv_rigid, self.pv_wall)
 
@@ -279,7 +288,7 @@ class DPDSimulation(object):
 
     def runSimulation(self,steps=20000,stats_every=200):
         #equilibrate
-        self.u.run(2000)
+        self.u.run(20000)
         for i in range(int(steps/stats_every)):
             if self.u.isMasterTask():
                 particle_zpositions_old=[x[0] for x in self.solvent_pv.getCoordinates()]
@@ -288,16 +297,18 @@ class DPDSimulation(object):
             if self.u.isMasterTask():
                 particle_zpositions_new=[x[0] for x in self.solvent_pv.getCoordinates()]
                 solute_zpositions=[x[0] for x in self.pv_rigid.getCoordinates()]
+
                 particle_velocities=self.solvent_pv.getVelocities()
                 solute_velocities=self.pv_rigid.getVelocities()
             if self.u.isMasterTask():
                 self.Statistics.calculate(particle_zpositions_old,particle_zpositions_new,particle_velocities,solute_zpositions,solute_velocities,i*stats_every)
         if self.u.isMasterTask():
             self.Statistics.plot()
-        comm=MPI.COMM_WORLD
-        rank=comm.Get_rank()
-        if rank == 1:
-            sim_db_entry2=Simulations.query.get(self.sim_index)
-            sim_db_entry2.status='finished'
-            db.session.commit()
-            os.system("cp -r %s/wall/ ../data/%s/."%(self.label,self.sim_index))
+        if not self.db_flag:
+            comm=MPI.COMM_WORLD
+            rank=comm.Get_rank()
+            if rank == 1:
+                sim_db_entry2=Simulations.query.get(self.sim_index)
+                sim_db_entry2.status='finished'
+                db.session.commit()
+                os.system("cp -r %s/wall/ ../data/%s/."%(self.label,self.sim_index))

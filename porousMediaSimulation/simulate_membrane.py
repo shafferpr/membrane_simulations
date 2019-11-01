@@ -114,6 +114,7 @@ if __name__ == '__main__':
     parser.add_argument('--membrane_lower_boundary', type=float, dest='membrane_lower_boundary', default=15, help="the lower boundary of the membrane, this is used to compute flow rate, default=15")
     parser.add_argument('--solute_z_position', type=float, dest='solute_z_position', default=45, help="the initial z position of the solutes, default=45")
     parser.add_argument('--sqrt_n_solutes', type=int, dest='sqrt_n_solutes', default=4, help="the square root of the number of solute particles, default=4")
+    parser.add_argument('--no_db_update',dest='no_db_update',action='store_true',default=False,help="don't record simulation in  the database")
     args=parser.parse_args()
     #os.system("mkdir %s"%args.output_prefix)
     #save_params(args)
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     membrane_input_file="%s/qq.dat"%args.membrane_input_directory
     print(membrane_input_file)
     simulation=DPDSimulation(membrane_input_file=membrane_input_file,label=args.label,solute_mesh=args.solute_mesh, solute_rigid_coords=args.solute_rigid_coords, solvent_force=args.solvent_force, solute_solvent_interaction=args.solute_solvent_interaction, solute_wall_interaction=args.solute_wall_interaction, n_solutes=args.sqrt_n_solutes**2,\
-                             box_size=args.box_size,nsteps=args.steps,composite_solute=args.composite_solute)
+                             box_size=args.box_size,nsteps=args.steps,composite_solute=args.composite_solute,db_flag=args.no_db_update)
     print("initialized")
     save_params(args,simulation.output_prefix)
     #simulation.initializeSolute(density=args.solute_density,radius=args.solute_radius,force=args.solute_force)
