@@ -97,6 +97,7 @@ if __name__ == '__main__':
     #parser.add_argument('--output',dest='output_prefix',default='sim_output',help="directory for all of the output files (including membrane geometry, \
         #particle trajectories, and stats files and figures)")
     parser.add_argument('--box_size', type=int, dest='box_size',default=50,help="total boxsize for cubic box, default=50")
+    parser.add_argument('--z_box_size', type=int, dest='z_box_size',default=50,help="z boxsize for cubic box, default=50")
     parser.add_argument('--composite_solute',dest='composite_solute',action='store_true',default=True,help="include composite solute particles, \
         this does not require an argument, just include --composite_solute to use this")
     parser.add_argument('--solute_mesh',dest='solute_mesh',default="sphere_mesh2.off",help="the .off mesh file containing the solute shape")
@@ -113,8 +114,9 @@ if __name__ == '__main__':
     parser.add_argument('--steps',type=int, dest='steps', default=100000, help="number of simulation steps, default is 100000")
     parser.add_argument('--membrane_lower_boundary', type=float, dest='membrane_lower_boundary', default=15, help="the lower boundary of the membrane, this is used to compute flow rate, default=15")
     parser.add_argument('--solute_z_position', type=float, dest='solute_z_position', default=45, help="the initial z position of the solutes, default=45")
+    parser.add_argument('--solute_layers', type=int, dest='solute_layers',default=1, help="the number of layers of solute particles, default=1")
     parser.add_argument('--sqrt_n_solutes', type=int, dest='sqrt_n_solutes', default=4, help="the square root of the number of solute particles, default=4")
-    parser.add_argument('--no_db_update',dest='no_db_update',action='store_true',default=False,help="don't record simulation in  the database")
+    parser.add_argument('--no_db_update',dest='no_db_update',action='store_true',default=True,help="don't record simulation in  the database")
     args=parser.parse_args()
     #os.system("mkdir %s"%args.output_prefix)
     #save_params(args)
@@ -144,14 +146,14 @@ if __name__ == '__main__':
     membrane_input_file="%s/qq.dat"%args.membrane_input_directory
     print(membrane_input_file)
     simulation=DPDSimulation(membrane_input_file=membrane_input_file,label=args.label,solute_mesh=args.solute_mesh, solute_rigid_coords=args.solute_rigid_coords, solvent_force=args.solvent_force, solute_solvent_interaction=args.solute_solvent_interaction, solute_wall_interaction=args.solute_wall_interaction, n_solutes=args.sqrt_n_solutes**2,\
-                             box_size=args.box_size,nsteps=args.steps,composite_solute=args.composite_solute,db_flag=args.no_db_update)
+                             box_size=args.box_size,z_box_size=args.z_box_size,nsteps=args.steps,composite_solute=args.composite_solute,db_flag=args.no_db_update)
     print("initialized")
     save_params(args,simulation.output_prefix)
     #simulation.initializeSolute(density=args.solute_density,radius=args.solute_radius,force=args.solute_force)
     simulation.initializeSolvent(density=args.solvent_density,radius=args.solvent_radius,force=args.solvent_force)
     if args.composite_solute:
-        simulation.initializeRigidSolute(a=args.solute_solvent_interaction, z_position=args.solute_z_position, \
-                                            num_particles_sqroot=args.sqrt_n_solutes, mesh_file=args.solute_mesh, coord_file=args.solute_rigid_coords)
+        simulation.initializeRigidSolute(a=args.solute_solvent_interaction, solute_solute_a=0.9*args.solute_solvent_interaction, z_position=args.solute_z_position, \
+                                            num_particles_sqroot=args.sqrt_n_solutes, mesh_file=args.solute_mesh, coord_file=args.solute_rigid_coords,layers=args.solute_layers)
     simulation.initializeWall(solute_interaction_strength=args.solute_wall_interaction)
     simulation.createOutput(dump_every=args.dump_every)
     #initialize the simulations statistics object

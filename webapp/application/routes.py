@@ -102,8 +102,25 @@ def simulations():
     simulations=Simulations.query.order_by(Simulations.id.desc()).limit(20).all()
     return render_template('simulations.html',simulations=simulations)
 
+@app.route('/membrane_downloads/',methods=['POST','GET'])
+def membrane_downloads():
+    membrane_dirs=os.listdir("../porousMediaSimulation/membranes")
+
+    return render_template('membrane_downloads.html',membrane_dirs=membrane_dirs)
+
+@app.route('/simulation_downloads/',methods=['POST','GET'])
+def simulation_downloads():
+    simulation_dirs=os.listdir("../porousMediaSimulation/simulations")
+
+    return render_template('simulation_downloads.html',simulation_dirs=simulation_dirs)
+
 
 @app.route('/download_simulation/<int:simulationId>',methods=['Post'])
 def download_simulation(simulationId):
     os.system("zip -r application/sim%d.zip ../data/%d/*"%(simulationId,simulationId))
     return send_file("sim%d.zip"%simulationId)
+
+@app.route('/download_simulation_dir/<simulation_label>',methods=['POST'])
+def download_simulation_dir(simulation_label):
+    os.system("zip -r application/sim%s.zip ../porousMediaSimulation/simulations/%s/*"%(simulation_label,simulation_label))
+    return send_file("sim%s.zip"%simulation_label)
