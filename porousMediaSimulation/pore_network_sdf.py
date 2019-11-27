@@ -7,9 +7,10 @@ import multiprocessing
 
 
 class PoreNetwork(object):
-    def __init__(self,npores,boxsize,lowerc,upperc,poresizeceiling,poresizefloor,outputpath,z_scale_factor):
+    def __init__(self,npores,boxsize,zboxsize,lowerc,upperc,poresizeceiling,poresizefloor,outputpath,z_scale_factor):
         self.npores=npores
         self.boxsize=boxsize
+        self.zboxsize=zboxsize
         self.lowerc=lowerc
         self.upperc=upperc
         self.poresizeceiling=poresizeceiling
@@ -34,7 +35,7 @@ class PoreNetwork(object):
     def createGrid(self):
         x=np.arange(0,self.boxsize,2.0,dtype=np.float32)
         y=np.arange(0,self.boxsize,2.0,dtype=np.float32)
-        z=np.arange(0,self.boxsize,2.0,dtype=np.float32)
+        z=np.arange(0,self.zboxsize,2.0,dtype=np.float32)
         q=np.vstack(np.meshgrid(x,y,z,indexing='ij')).reshape(3,-1).T #array of 3d numbers
         return q
 
@@ -129,8 +130,8 @@ class PoreNetwork(object):
         sizefile="%s/qq"%self.outputpath
         #sizefile=outputfile.split('.')[0]
         with open(sizefile,"w") as f:
-            f.write("%d %d %d\n"%(self.boxsize,self.boxsize,self.boxsize))
-            f.write("%d %d %d\n"%(self.boxsize/2,self.boxsize/2,self.boxsize/2))
+            f.write("%d %d %d\n"%(self.zboxsize,self.boxsize,self.boxsize))
+            f.write("%d %d %d\n"%(self.zboxsize/2,self.boxsize/2,self.boxsize/2))
         os.system("cat %s %s >%s"%(sizefile,tempfile,outputfile))
 
     def generate_h5(self):
@@ -138,7 +139,7 @@ class PoreNetwork(object):
         from porousMediaSimulation.dpdsimulation import DPDSimulation
         outputfile="%s/qq.dat"%self.outputpath
         simulation=DPDSimulation(membrane_input_file=outputfile,label=self.outputpath, \
-                                 box_size=self.boxsize, ranks=1)
+                                 box_size=self.boxsize,z_box_size=self.zboxsize,ranks=1)
         simulation.drawWall()
 
     def generate_image(self):
@@ -153,6 +154,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='create a membrane structure')
     parser.add_argument('--npores', type=int, dest='npores',default=12,help="number of spherical pores in the membrane, in excess of the predefined grid pores on the bottom, default=12")
     parser.add_argument('--boxsize', type=int, dest='boxsize',default=50,help="total boxsize for cubic box, default=50")
+    parser.add_argument('--zboxsize', type=int, dest='zboxsize',default=50,help="z box dimension, default=50")
     parser.add_argument('--lowerc', type=int, dest='lowerc',default=15,help="lower cutoff for the membrane structure in the box, default=15")
     parser.add_argument('--upperc', type=int, dest='upperc',default=35,help="upper cutoff for the membrane structure in the box, default=35")
     parser.add_argument('--poresizeceiling', type=float, dest='poresizeceiling',default=8,help="largest pore size, near the top of the membrane, default=8")
@@ -164,7 +166,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     os.system("mkdir %s"%args.outputpath)
     save_params(args)
-    pn=PoreNetwork(npores=args.npores,boxsize=args.boxsize,lowerc=args.lowerc,upperc=args.upperc,poresizeceiling=args.poresizeceiling,poresizefloor=args.poresizefloor,outputpath=args.outputpath,z_scale_factor=args.z_scale_factor)
+    pn=PoreNetwork(npores=args.npores, boxsize=args.boxsize, zboxsize=args.zboxsize, lowerc=args.lowerc, upperc=args.upperc, poresizeceiling=args.poresizeceiling, poresizefloor=args.poresizefloor, outputpath=args.outputpath, z_scale_factor=args.z_scale_factor)
     if args.runparallel:
         pn.QQ_parallel()
     else:

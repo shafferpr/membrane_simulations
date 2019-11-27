@@ -279,14 +279,14 @@ class DPDSimulation(object):
                                                 50, 10000, (1.0, 1.0, 1.0),
                                                 [("velocity", "vector_from_float4")], '%s/velocity/solute-'%self.output_prefix))
 
-        self.u.registerPlugins(mir.Plugins.createDumpParticles('part_dump', self.solvent_pv, dump_every, [], '%s/particles/solvent_particles-'%self.output_prefix))
+        self.u.registerPlugins(mir.Plugins.createDumpParticles('part_dump', self.solvent_pv, 10*dump_every, [], '%s/particles/solvent_particles-'%self.output_prefix))
 
         if self.composite_solute:
             self.u.registerPlugins(mir.Plugins.createDumpParticles('rigid_dump', self.pv_rigid, dump_every, [], '%s/particles/solute_particles-'%self.output_prefix))
         #if self.solvent_radius > 0.0:
             #self.u.registerPlugins(mir.Plugins.createDumpParticles('part_dump_solute', self.solute_pv, dump_every, [], '%s/particles/solute_particles-'%self.output_prefix))
         # we can also dump the frozen particles for visualization purpose
-        self.u.registerPlugins(mir.Plugins.createDumpParticles('part_dump_wall', self.pv_wall, dump_every, [], '%s/particles/wall_particles-'%self.output_prefix))
+        #self.u.registerPlugins(mir.Plugins.createDumpParticles('part_dump_wall', self.pv_wall, dump_every, [], '%s/particles/wall_particles-'%self.output_prefix))
         print("plugins registered")
         # we can dump the wall sdf in xdmf + h5 format for visualization purpose
         # the dumped file is a grid with spacings h containing the SDF values
